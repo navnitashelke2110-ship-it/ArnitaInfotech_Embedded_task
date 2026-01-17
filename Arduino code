@@ -1,0 +1,68 @@
+#include <LiquidCrystal.h>
+
+// LCD pins: RS, E, D4, D5, D6, D7
+LiquidCrystal lcd(7, 6, 5, 4, 3, 2);
+
+// Pin definitions
+const int mqSensorPin = A0;
+const int phSensorPin = A1;
+const int condSensorPin = A2;
+const int buzzerPin = 8;
+
+// Threshold values (adjust after calibration)
+int mqThreshold = 400;
+float phLow = 6.0;
+float phHigh = 8.0;
+int condThreshold = 500;
+
+void setup() {
+  pinMode(buzzerPin, OUTPUT);
+  lcd.begin(16, 2);
+  lcd.print("Food Test Sys");
+  delay(2000);
+  lcd.clear();
+}
+
+void loop() {
+  int mqValue = analogRead(mqSensorPin);
+  int phRaw = analogRead(phSensorPin);
+  int condValue = analogRead(condSensorPin);
+
+  // Convert pH sensor value (approximation)
+  float phValue = (phRaw * 14.0) / 1023.0;
+
+  lcd.setCursor(0, 0);
+  lcd.print("MQ:");
+  lcd.print(mqValue);
+  lcd.print(" pH:");
+  lcd.print(phValue, 1);
+
+  lcd.setCursor(0, 1);
+  lcd.print("Cond:");
+  lcd.print(condValue);
+
+  bool adulterated = false;
+
+  if (mqValue > mqThreshold)
+    adulterated = true;
+
+  if (phValue < phLow || phValue > phHigh)
+    adulterated = true;
+
+  if (condValue > condThreshold)
+    adulterated = true;
+
+  delay(1500);
+  lcd.clear();
+
+  if (adulterated) {
+    lcd.print("ADULTERATED");
+    digitalWrite(buzzerPin, HIGH);
+  } else {
+    lcd.print("PURE FOOD");
+    digitalWrite(buzzerPin, LOW);
+  }
+
+  delay(2000);
+  lcd.clear();
+}
